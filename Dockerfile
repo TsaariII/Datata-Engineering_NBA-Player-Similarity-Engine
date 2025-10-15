@@ -1,29 +1,54 @@
-# Dockerfile
-FROM python:3.11-slim
+# syntax=docker/dockerfile:1.7
 
-# Set these at build time if you want, or just run as a user at runtime
-ARG UID=1000
-ARG GID=1000
+############################
+# Base builder
+############################
+FROM python:3.11-slim AS builder
 
-# Create app dir and a user/group that match host
-RUN groupadd -g ${GID} appgroup \
-    && useradd -m -u ${UID} -g appgroup appuser
+# 1) System sanity
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1 \
+    POETRY_VIRTUALENVS_CREATE=false
 
+# 2) OS deps for wheels you actually use (pandas, lxml/bs4 sometimes need these; psycopg needs libpq)
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      build-essential \
+      gcc \
+      libpq-dev \
+      curl \
+      ca-certificates \
+      tzdata \
+      libxml2-dev \
+      libxslt1-dev \
+      && rm -rf /var/lib/apt/lists/*
+
+# 3) Create user so you’re not root inside the container like a gremlin
+RUN useradd -m -u 1000 app
 WORKDIR /app
 
-# Install deps first (better cache)
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# 4) Install Python deps first to leverage Docker layer cache
+COPY requirements.txt /app/requirements.txt
+RUN python -m pip install --upgrade pip \
+ && pip install -r requirements.txt
 
-# Copy only code, not data
-COPY data_scraper.py .
+# 5) Copy the code last (so you don’t bust cache every time you sneeze)
+COPY . /app
 
-# Create the data folder in the image so paths exist,
-# but we'll bind-mount a host dir over it at run time
-RUN mkdir -p /app/data \
-    && chown -R appuser:appgroup /app
+# Keep permissions friendly
+RUN chown -R app:app /app
+USER app
 
-USER appuser
+############################
+# Runtime (single-stage is fine; slimming optional)
+############################
+FROM builder AS runtime
+WORKDIR /app
 
-# Default: run the scraper (you can override with docker run)
-CMD ["python", "data_scraper.py"]
+# Expose API port; ETL ignores this, relax
+EXPOSE 8000
+
+# Default command is a no-op so compose can override with uvicorn or the ETL
+# You can set a helpful default to run the API locally without compose:
+CMD ["python", "-m", "uvicorn", "service.main:app", "--host", "0.0.0.0", "--port", "8000"]

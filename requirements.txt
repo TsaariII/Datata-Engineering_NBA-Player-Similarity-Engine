@@ -3,3 +3,5 @@ beautifulsoup4
 pandas
 SQLAlchemy>=2.0
 psycopg[binary]
+fastapi
+uvicorn

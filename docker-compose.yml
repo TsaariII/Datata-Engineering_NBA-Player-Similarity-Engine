@@ -7,16 +7,17 @@ services:
       POSTGRES_DB: nba
     volumes:
       - ./data/db:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
     ports: ["5432:5432"]
 
   etl:
     build: .
     depends_on: [db]
     environment:
-      DATABASE_URL: postgres://app:app@db:5432/nba
+      DATABASE_URL: postgresql+psycopg://app:app@db:5432/nba
     volumes:
       - ./data:/app/data
-    command: ["python", "-m", "etl.scripts.run_etl"]
+    command: ["python", "-m", "etl.scripts.run_etl", "--year", "2024"]
 
   api:
     build: .
@@ -25,21 +26,3 @@ services:
       DATABASE_URL: postgres://app:app@db:5432/nba
     ports: ["8000:8000"]
     command: ["uvicorn", "service.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
-
-  postgres:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: nba
-      POSTGRES_USER: etl_user
-      POSTGRES_PASSWORD: etl_pass
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U etl_user -d nba"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-volumes:
-  pgdata:
