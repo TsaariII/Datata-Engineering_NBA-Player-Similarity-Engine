@@ -1,28 +1,47 @@
 services:
-  db:
-    image: pgvector/pgvector:pg16
+  api:
+    build: .
+    user: "${UID:-1000}:${GID:-1000}"
+    ports:
+      - "${PORT:-8555}:8555"
+    mem_limit: 2g
     environment:
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: app
-      POSTGRES_DB: nba
+      - PORT=${PORT}
+      - HOST=${HOST}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      - postgres
     volumes:
-      - ./data/db:/var/lib/postgresql/data
-      - ./db/init:/docker-entrypoint-initdb.d
-    ports: ["5432:5432"]
+      - .:/app
 
   etl:
     build: .
-    depends_on: [db]
+    user: "${UID:-1000}:${GID:-1000}"
     environment:
-      DATABASE_URL: postgresql+psycopg://app:app@db:5432/nba
+      - LOG_LEVEL=${LOG_LEVEL}
+      - DATABASE_URL=${DATABASE_URL}
+      - NBA_PER_GAME_CSV=${NBA_PER_GAME_CSV}
+      - ETL_YEAR=${ETL_YEAR}
+    depends_on:
+      - postgres
     volumes:
+      - .:/app
       - ./data:/app/data
-    command: ["python", "-m", "etl.scripts.run_etl", "--year", "2024"]
+    command: ["uv", "run", "python", "-m", "etl.scripts.run_etl", "--year", "${ETL_YEAR:-2024}"]
+    profiles: ["etl"]
 
-  api:
-    build: .
-    depends_on: [db]
+  postgres:
+    image: pgvector/pgvector:pg16
     environment:
-      DATABASE_URL: postgres://app:app@db:5432/nba
-    ports: ["8000:8000"]
-    command: ["uvicorn", "service.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PW}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./data/init:/docker-entrypoint-initdb.d:ro
+
+volumes:
+  pg_data:
