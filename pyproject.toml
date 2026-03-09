@@ -15,6 +15,7 @@ dependencies = [
 
 [project.scripts]
 run-etl = "etl.scripts.run_etl:main"
+build-features = "etl.scripts.build_features:main"
 
 [tool.uv]
 
