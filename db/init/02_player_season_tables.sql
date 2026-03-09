@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS player_seasons (
     player_key      text        NOT NULL,
     player_name     text        NOT NULL,
-    season          int         NOT NULL
+    season          int         NOT NULL,
     team            int         NULL,
     pos             text        NULL,
     g               int         NULL,
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS player_seasons (
 CREATE INDEX IF NOT EXISTS idx_player_seasons_season ON players_seasons (season);
 CREATE INDEX IF NOT EXISTS idx_player_seasons_name ON players_seasons (player_name);
 
-CREATE TABLE IF NOT EXISTS player_seasons_features (
+CREATE TABLE IF NOT EXISTS player_season_features (
     player_key      text                NOT NULL,
     season          int                 NOT NULL,
     feature_set     text                NOT NULL,
