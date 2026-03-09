@@ -1,36 +1,4 @@
 services:
-  api:
-    build: .
-    user: "${UID:-1000}:${GID:-1000}"
-    ports:
-      - "${PORT:-8555}:8555"
-    mem_limit: 2g
-    environment:
-      - PORT=${PORT}
-      - HOST=${HOST}
-      - LOG_LEVEL=${LOG_LEVEL}
-      - DATABASE_URL=${DATABASE_URL}
-    depends_on:
-      - postgres
-    volumes:
-      - .:/app
-
-  etl:
-    build: .
-    user: "${UID:-1000}:${GID:-1000}"
-    environment:
-      - LOG_LEVEL=${LOG_LEVEL}
-      - DATABASE_URL=${DATABASE_URL}
-      - NBA_PER_GAME_CSV=${NBA_PER_GAME_CSV}
-      - ETL_YEAR=${ETL_YEAR}
-    depends_on:
-      - postgres
-    volumes:
-      - .:/app
-      - ./data:/app/data
-    command: ["uv", "run", "python", "-m", "etl.scripts.run_etl", "--year", "${ETL_YEAR:-2024}"]
-    profiles: ["etl"]
-
   postgres:
     image: pgvector/pgvector:pg16
     environment:
@@ -42,6 +10,50 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  etl:
+    build: .
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DATABASE_URL=${DATABASE_URL}
+      - NBA_PER_GAME_CSV=${NBA_PER_GAME_CSV}
+      - ETL_YEAR=${ETL_YEAR:-2024}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - ./data:/app/data
+    command: >
+      sh -c "
+        uv run python -m etl.scripts.run_etl --year ${ETL_YEAR:-2024} &&
+        uv run python -m etl.scripts.build_features --year ${ETL_YEAR:-2024}
+      "
+
+  api:
+    build: .
+    ports:
+      - "${PORT:-8555}:8555"
+    mem_limit: 2g
+    environment:
+      - PORT=${PORT:-8555}
+      - HOST=${HOST:-0.0.0.0}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      etl:
+        condition: service_completed_successfully
+    volumes:
+      - .:/app
+    command: ["uv", "run", "uvicorn", "service.main:app", "--host", "0.0.0.0", "--port", "8555"]
 
 volumes:
   pg_data:
