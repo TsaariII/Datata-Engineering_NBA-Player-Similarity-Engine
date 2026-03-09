@@ -28,7 +28,7 @@ def load_feature_matrix(
     """
     sql = text(
         """
-        SELECT ps.player AS player, f.z_vector AS z_vector
+        SELECT ps.player_name AS player, f.z_vector AS z_vector
         FROM player_season_features f
         JOIN player_seasons ps
             ON ps.player_key = f.player_key
@@ -41,7 +41,7 @@ def load_feature_matrix(
     df = pd.read_sql(sql, engine, params={'season': season, 'feature_set': feat_set})
     if df.empty:
         return [], np.zeros((0,0), dtype=float)
-    players = df['players'].astype(str).tolist()
+    players = df['player'].astype(str).tolist()
     mat = np.array(df['z_vector'].to_list(), dtype=float)
     return players, mat
 

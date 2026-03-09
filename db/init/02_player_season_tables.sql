@@ -13,8 +13,8 @@ CREATE TABLE IF NOT EXISTS player_seasons (
     PRIMARY KEY (player_key, season)
 );
 
-CREATE INDEX IF NOT EXISTS idx_player_seasons_season ON players_seasons (season);
-CREATE INDEX IF NOT EXISTS idx_player_seasons_name ON players_seasons (player_name);
+CREATE INDEX IF NOT EXISTS idx_player_seasons_season ON player_seasons (season);
+CREATE INDEX IF NOT EXISTS idx_player_seasons_name ON player_seasons (player_name);
 
 CREATE TABLE IF NOT EXISTS player_season_features (
     player_key      text                NOT NULL,
