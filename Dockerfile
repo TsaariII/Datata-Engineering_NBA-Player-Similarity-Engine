@@ -13,4 +13,4 @@ COPY . .
 EXPOSE 8555
 ENV UV_CACHE_DIR=/tmp/uv-cache
 
-CMD ["uv", "run", "./service/main.py"]
+CMD ["uv", "run", "uvicorn", "service.main:app", "--host", "0.0.0.0", "--port", "8555"]
