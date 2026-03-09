@@ -5,10 +5,8 @@ from typing import Any
 
 def _normalize_database_url(url: str) -> str:
     url = url.strip()
-    if url.startswith('postgres://'):
-        url = 'postgres://' + url[len('postgres://') :]
-    if url.startswith('postgres://') and '+' not in url.split('://', 1)[0]:
-        url = 'postgres+psycopg://' + url[len('postgres://') :]
+    if url.startswith("postgres://") and "+" not in url.split("://", 1)[0]:
+        url = "postgres+psycopg://" + url[len("postgres://") :]
     return url
 
 def write_per_game(engine_url: str, df: pd.DataFrame, year: int) -> tuple[str, str]:
