@@ -119,7 +119,6 @@ def main() -> None:
     has_mp = 'mp' in seasons_df.columns
     has_mpg = 'mpg' in seasons_df.columns
     has_total_minutes = 'total_minutes' in seasons_df.columns
-    stats_cols = [c for c in FEATURES if c in seasons_df.columns]
     for _, row in seasons_df.iterrows():
         stats = {k: _safe_float(row.get(k)) for k in stats_cols}
         seasons_payload.append(

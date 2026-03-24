@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS player_seasons (
     player_key      text        NOT NULL,
     player_name     text        NOT NULL,
     season          int         NOT NULL,
-    team            int         NULL,
+    team            text        NULL,
     pos             text        NULL,
     g               int         NULL,
     mp              numeric     NULL,
