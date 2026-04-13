@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 import pandas as pd
+import numpy as np
 from sqlalchemy import create_engine, text
 from etl.features.per_game_v1 import FEATURE_SET as PG_V1_FEATURE_SET
 from etl.features.per_game_v1 import FEATURES as PG_V1_FEATURES
@@ -138,13 +139,19 @@ def main() -> None:
     # 5. Z-score the chosen feature set
     pack = FeaturePack(feature_set=feat_set, feature_names=feats)
     feat_df = zscore_features(seasons_df, pack)
-    feat_payload = feat_df.to_dict(orient='records')
     missing_feats = [f for f in feats if f not in seasons_df.columns]
     if missing_feats:
         logger.warning(
             'These features were not found in seasons_df and will be zero-filled: %s',
             missing_feats,
         )
+    # 5b. Build embedding from z_vector.
+    #     For Phase 1 the embedding is identical to the z_vector.
+    #     In Phase 2 (PCA) this will be replaced with the reduced vector.
+    feat_df['embeddings'] = feat_df['z_vector'].apply(
+        lambda v: np.array(v, dtype=np.float32).tolist()
+    )
+    feat_payload = feat_df.to_dict(orient='records')
     # 6. Upsert into DB
     ensure_tables(args.db_url)
     n1 = upsert_player_seasons(args.db_url, seasons_payload)

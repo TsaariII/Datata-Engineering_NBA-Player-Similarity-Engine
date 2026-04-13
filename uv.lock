@@ -245,6 +245,7 @@ source = { editable = "." }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "fastapi" },
+    { name = "numpy" },
     { name = "pandas" },
     { name = "psycopg", extra = ["binary"] },
     { name = "requests" },
@@ -256,6 +257,7 @@ dependencies = [
 requires-dist = [
     { name = "beautifulsoup4" },
     { name = "fastapi" },
+    { name = "numpy" },
     { name = "pandas" },
     { name = "psycopg", extras = ["binary"] },
     { name = "requests" },

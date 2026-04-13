@@ -1,4 +1,6 @@
+from __future__ import annotations
 from typing import Any, Dict, Iterable, List
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     ARRAY,
     JSON,
@@ -50,6 +52,7 @@ def _tables(metadata: MetaData) -> tuple[Table, Table]:
         Column("feature_names", ARRAY(Text), nullable=False),
         Column("z_scores", JSONB, nullable=False),
         Column("z_vector", ARRAY(Float), nullable=False),
+        Column("embedding", Vector(), nullable=True),
         Column("created_at", DateTime(timezone=True), server_default=func.now(), nullable=False),
     )
     return player_seasons, player_season_features
@@ -75,7 +78,7 @@ def upsert_player_seasons(engine_url: str, rows: List[Dict[str, Any]]) -> int:
     update_cols = {
         c.name: getattr(stmt.excluded, c.name)
         for c in player_seasons.columns
-        if c.name not in {'playerr_key', 'season'}
+        if c.name not in {'player_key', 'season'}
     }
     stmt = stmt.on_conflict_do_update(
         index_elements=[player_seasons.c.player_key, player_seasons.c.season],
