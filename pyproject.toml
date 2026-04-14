@@ -10,6 +10,7 @@ dependencies = [
   "numpy",
   "SQLAlchemy>=2.0",
   "psycopg[binary]",
+  "pgvector",
   "fastapi",
   "uvicorn",
 ]
