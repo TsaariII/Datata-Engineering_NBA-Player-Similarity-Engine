@@ -7,8 +7,10 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException, Query
 from sqlalchemy import create_engine, text
 from service.similarity_repo import top_k_similar
-from etl.features.per_game_v1 import FEATURE_SET
+from etl.features.per_game_v1 import FEATURE_SET as PG_V1_FEAT_SET
+from etl.features.advanced_v1 import FEATURE_SET as ADV_V1_FEAT_SET
 
+_DEFAULT_FEAT_SET = ADV_V1_FEAT_SET
 app = FastAPI(title="NBA Player Similarity Engine")
 
 def _normalize_database_url(url: str) -> str:
@@ -91,7 +93,7 @@ def similar_players(
     name: str,
     year: int = Query(2024, ge=1947, le=2100),
     k: int = Query(10, ge=1, le=50),
-    feature_set: str = Query(FEATURE_SET, description="Feature set version to use"),
+    feature_set: str = Query(_DEFAULT_FEAT_SET, description="Feature set version to use"),
 ) -> Dict[str, Any]:
     """Return top-k similar players based on precomputed z-score feature vectors.
 
