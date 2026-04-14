@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Any, Dict, Iterable, List
+import logging
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     ARRAY,
@@ -14,10 +15,14 @@ from sqlalchemy import (
     Table,
     Text,
     create_engine,
-    func
+    func,
+    inspect,
+    text
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+
+logger = logging.getLogger(__name__)
 
 def _normalize_database_url(url: str) -> str:
     url = url.strip()
@@ -57,15 +62,34 @@ def _tables(metadata: MetaData) -> tuple[Table, Table]:
     )
     return player_seasons, player_season_features
 
+def _ensure_pgvector(engine) -> None:
+    with engine.begin() as conn:
+        conn.execute(text('CREATE EXTENSION IF NOT EXISTS vector'))
+
+def _ensure_embedding_column(engine) -> None:
+    insp = inspect(engine)
+    if not insp.has_table('player_season_features'):
+        return
+    cols = {col['name'] for col in insp.get_columns('player_season_features')}
+    if 'embedding' not in cols:
+        logger.info("Adding missing 'embedding' column to player_season_features")
+        with engine.begin() as conn:
+            conn.execute(text(
+                "ALTER TABLE player_season_features "
+                "ADD COLUMN embedding vector NULL"
+            ))
+
 def ensure_tables(engine_url: str) -> None:
     """Creates tables if they don't exist.
 
     You can also rely on docker-entrypoint-initdb.d SQL files; this is a safety net.
     """
     engine = create_engine(_normalize_database_url(engine_url), pool_pre_ping=True, future=True)
+    _ensure_pgvector(engine)
     md = MetaData()
     _tables(md)
     md.create_all(engine, checkfirst=True)
+    _ensure_embedding_column(engine)
 
 def upsert_player_seasons(engine_url: str, rows: List[Dict[str, Any]]) -> int:
     engine = create_engine(_normalize_database_url(engine_url), pool_pre_ping=True, future=True)
