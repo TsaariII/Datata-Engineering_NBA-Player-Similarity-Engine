@@ -94,10 +94,11 @@ def upsert_player_season_features(engine_url: str, rows: List[Dict[str, Any]]) -
     _, player_season_features = _tables(md)
     md.create_all(engine, checkfirst=True)
     stmt = pg_insert(player_season_features).values(rows)
+    _pk_and_immutable = {'player_key', 'season', 'feature_set', 'created_at'}
     update_cols = {
         c.name: getattr(stmt.excluded, c.name)
         for c in player_season_features.columns
-        if c.name not in {'player_key', 'season'}
+        if c.name not in _pk_and_immutable
     }
     stmt = stmt.on_conflict_do_update(
         index_elements=[
