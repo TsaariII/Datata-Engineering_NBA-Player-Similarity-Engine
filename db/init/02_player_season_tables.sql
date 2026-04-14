@@ -1,3 +1,5 @@
+
+
 CREATE TABLE IF NOT EXISTS player_seasons (
     player_key      text        NOT NULL,
     player_name     text        NOT NULL,
@@ -23,6 +25,7 @@ CREATE TABLE IF NOT EXISTS player_season_features (
     feature_names   text[]              NOT NULL,
     z_scores        jsonb               NOT NULL,
     z_vector        double precision[]  NOT NULL,
+    embedding       vector              NULL,
     created_at      timestamptz         NOT NULL DEFAULT now(),
     PRIMARY KEY (player_key, season, feature_set),
     FOREIGN KEY (player_key, season)
