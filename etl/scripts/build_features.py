@@ -148,7 +148,7 @@ def main() -> None:
     # 5b. Build embedding from z_vector.
     #     For Phase 1 the embedding is identical to the z_vector.
     #     In Phase 2 (PCA) this will be replaced with the reduced vector.
-    feat_df['embeddings'] = feat_df['z_vector'].apply(
+    feat_df['embedding'] = feat_df['z_vector'].apply(
         lambda v: np.array(v, dtype=np.float32).tolist()
     )
     feat_payload = feat_df.to_dict(orient='records')
