@@ -74,14 +74,14 @@ def top_k_similiar_pgvector(
     query_vec = _get_player_embedding(engine, season, feat_set, name)
     sql = text(
         """
-        SELECT ps.player_name AS player, 1.0 - (f.embbeding <=> :query_vec::vector) AS score
+        SELECT ps.player_name AS player, 1.0 - (f.embedding <=> :query_vec::vector) AS score
         FROM player_season_features f
         JOIN player_season ps
             ON ps.player_key = f.player_key
             AND ps.season = f.season
         WHERE f.season = :season
             AND f.feature_set = :feature_set
-            ps.player_name != :player_name
+            AND ps.player_name != :player_name
             AND f.embedding IS NOT NULL
         ORDER BY f.embedding <=> :query_vec::vector
         LIMIT :k
