@@ -1,0 +1,219 @@
+[
+  {
+    "_id": "curry_2016_elite_3pt_scorer",
+    "description": "Elite high-volume 3-point scorer with playmaking",
+    "feature_set": "advanced_v1",
+    "query": {
+      "player": "Stephen Curry",
+      "season": 2016
+    },
+    "k": 10,
+    "must_appear_in_top_k": [
+      "Klay Thompson",
+      "Damian Lillard"
+    ],
+    "must_not_appear": [
+      "Rudy Gobert",
+      "DeAndre Jordan"
+    ],
+    "rationale": {
+      "why_matches": "Curry sits at the extreme end of p3a_rate and ts_pct with high usage. Thompson shares the same system and shooting profile. Lillard mirrors the usage+p3a_rate+ts_pct fingerprint as a ball-dominant guard who creates his own shot from deep.",
+      "why_exclusions": "Defensive bigs like Gobert and Jordan score near zero on p3a_rate, near zero on assist proxy, and are low-usage — the opposite profile on almost every feature dimension."
+    }
+  },
+  {
+    "_id": "jokic_2022_passing_big",
+    "description": "Pass-first offensive center with high usage",
+    "feature_set": "advanced_v1",
+    "query": {
+      "player": "Nikola Jokic",
+      "season": 2022
+    },
+    "k": 10,
+    "must_appear_in_top_k": [
+      "Domantas Sabonis"
+    ],
+    "must_not_appear": [
+      "Buddy Hield",
+      "Joe Harris"
+    ],
+    "rationale": {
+      "why_matches": "Jokic is extreme on assist_pct_proxy for a big man, combined with high defrb_pct, high usage, and strong ts_pct. Sabonis is the most statistically similar player in the league — high assists for a big, dominant rebounding, similar usage band.",
+      "why_exclusions": "Hield and Harris are pure perimeter shooters: high p3a_rate, near-zero blocks and drb_pct, low assist proxy. They are incompatible on every interior dimension."
+    }
+  },
+  {
+    "_id": "gobert_2019_defensive_big",
+    "description": "Paint-anchored shot-blocking center, minimal offensive role",
+    "feature_set": "advanced_v1",
+    "query": {
+      "player": "Rudy Gobert",
+      "season": 2019
+    },
+    "k": 10,
+    "must_appear_in_top_k": [
+      "Myles Turner",
+      "Jaren Jackson Jr."
+    ],
+    "must_not_appear": [
+      "Stephen Curry",
+      "Damian Lillard"
+    ],
+    "rationale": {
+      "why_matches": "Gobert scores at the extreme on blocks and defrb_pct, with near-zero p3a_rate, very low usage, and minimal assist proxy. Turner and JJJ share the shot-blocking center archetype — high blocks, high drb, low perimeter involvement.",
+      "why_exclusions": "Curry and Lillard are maximal on p3a_rate, high usage, and high assist proxy. They share zero features with a low-usage rim protector."
+    }
+  },
+  {
+    "_id": "giannis_2020_paint_attacker",
+    "description": "Dominant paint attacker — extreme ftr, low 3-point rate, high blocks",
+    "feature_set": "advanced_v1",
+    "query": {
+      "player": "Giannis Antetokounmpo",
+      "season": 2020
+    },
+    "k": 10,
+    "must_appear_in_top_k": [
+      "Zion Williamson"
+    ],
+    "must_not_appear": [
+      "Joe Harris",
+      "Duncan Robinson"
+    ],
+    "rationale": {
+      "why_matches": "Giannis sits at the extreme end of ftr, very high usage, near-zero p3a_rate, strong blocks, and high defrb_pct. Zion shares the same fingerprint: elite ftr, high usage, low p3a_rate, paint-first aggression.",
+      "why_exclusions": "Harris and Robinson are defined by high p3a_rate, very low ftr, low usage, and near-zero blocks — the direct opposite of a paint-dominant player on every key feature."
+    }
+  },
+  {
+    "_id": "klay_2019_3and_d_wing",
+    "description": "High-volume catch-and-shoot 3-and-D wing",
+    "feature_set": "advanced_v1",
+    "query": {
+      "player": "Klay Thompson",
+      "season": 2019
+    },
+    "k": 10,
+    "must_appear_in_top_k": [
+      "Duncan Robinson",
+      "Buddy Hield"
+    ],
+    "must_not_appear": [
+      "Nikola Jokic",
+      "Rudy Gobert"
+    ],
+    "rationale": {
+      "why_matches": "Thompson has high p3a_rate, low ftr (no foul-drawing), low assist proxy, and moderate usage — the textbook 3-and-D/shooting wing profile. Robinson and Hield are the archetypal comps: defined almost entirely by volume shooting from deep with minimal ball-handling.",
+      "why_exclusions": "Jokic and Gobert are interior bigs with near-zero p3a_rate, high rebound rates, and either high assist proxy (Jokic) or high blocks (Gobert). Incompatible on every dimension."
+    }
+  },
+  {
+    "_id": "cp3_2019_pass_first_pg",
+    "description": "Pass-first point guard — elite assist rate, controlled usage",
+    "feature_set": "advanced_v1",
+    "query": {
+      "player": "Chris Paul",
+      "season": 2019
+    },
+    "k": 10,
+    "must_appear_in_top_k": [
+      "Kyle Lowry",
+      "Mike Conley"
+    ],
+    "must_not_appear": [
+      "Rudy Gobert",
+      "DeAndre Jordan"
+    ],
+    "rationale": {
+      "why_matches": "Paul scores extremely high on assist_pct_proxy with moderate usage, moderate ts_pct, and very low blocks and drb_pct. Lowry and Conley share the pass-first guard footprint: high assist rate relative to usage, perimeter player with minimal interior presence.",
+      "why_exclusions": "Gobert and Jordan are defined by interior rebounding, blocks, and near-zero assist proxy. A pass-first guard and a rim-running center share nothing in the advanced_v1 space."
+    }
+  },
+  {
+    "_id": "lebron_2020_versatile_wing",
+    "description": "High-usage versatile wing — combines scoring, playmaking, and athleticism",
+    "feature_set": "advanced_v1",
+    "query": {
+      "player": "LeBron James",
+      "season": 2020
+    },
+    "k": 10,
+    "must_appear_in_top_k": [
+      "Luka Doncic",
+      "Kevin Durant"
+    ],
+    "must_not_appear": [
+      "Rudy Gobert",
+      "Klay Thompson"
+    ],
+    "rationale": {
+      "why_matches": "LeBron combines elite usage, high assist_pct_proxy, strong ts_pct, and balanced rebounding — the rarest combination in the feature space. Doncic mirrors the usage + playmaking + efficiency fingerprint almost exactly. Durant shares the elite ts_pct and high usage, though with less assist volume.",
+      "why_exclusions": "Gobert is a low-usage rim protector — the inverse on usage, assist proxy, and p3a_rate. Thompson is a spot-up shooter with low assist proxy — incompatible on the playmaking dimension."
+    }
+  },
+  {
+    "_id": "harris_2021_spot_up_shooter",
+    "description": "Spot-up perimeter shooter — high efficiency, minimal creation",
+    "feature_set": "advanced_v1",
+    "query": {
+      "player": "Joe Harris",
+      "season": 2021
+    },
+    "k": 10,
+    "must_appear_in_top_k": [
+      "Duncan Robinson",
+      "Bogdan Bogdanovic"
+    ],
+    "must_not_appear": [
+      "Giannis Antetokounmpo",
+      "Nikola Jokic"
+    ],
+    "rationale": {
+      "why_matches": "Harris has high p3a_rate, strong ts_pct, very low ftr, low assist proxy, and moderate minutes — a clean catch-and-shoot wing fingerprint. Robinson is the closest archetype in the league. Bogdanovic adds volume scoring from the perimeter with similar efficiency.",
+      "why_exclusions": "Giannis and Jokic are high-usage primary ball-handlers with extreme interior metrics. They share none of the perimeter-shooter dimensions."
+    }
+  },
+  {
+    "_id": "embiid_2023_dominant_scoring_big",
+    "description": "High-usage scoring big — combines interior scoring with foul drawing",
+    "feature_set": "advanced_v1",
+    "query": {
+      "player": "Joel Embiid",
+      "season": 2023
+    },
+    "k": 10,
+    "must_appear_in_top_k": [
+      "Karl-Anthony Towns",
+      "Anthony Davis"
+    ],
+    "must_not_appear": [
+      "Chris Paul",
+      "Klay Thompson"
+    ],
+    "rationale": {
+      "why_matches": "Embiid has elite ftr, high usage, good ts_pct, strong blocks, and high defrb_pct. Towns shares the scoring-big profile: high ts_pct, elevated ftr, and interior rebounding. Davis brings similar blocks + defrb + usage combination.",
+      "why_exclusions": "Paul is a low-usage pass-first guard with near-zero blocks. Thompson is a shooter with minimal interior presence. Neither approaches Embiid's interior metrics."
+    }
+  },
+  {
+    "_id": "jokic_2024_regression_check",
+    "description": "Regression guard — Jokic should remain unique across seasons",
+    "feature_set": "advanced_v1",
+    "query": {
+      "player": "Nikola Jokic",
+      "season": 2024
+    },
+    "k": 10,
+    "must_appear_in_top_k": [
+      "Domantas Sabonis"
+    ],
+    "must_not_appear": [
+      "Stephen Curry",
+      "Klay Thompson"
+    ],
+    "rationale": {
+      "why_matches": "This is a cross-season stability check. Jokic's archetype (passing big) should produce consistent comps year over year. Sabonis should remain the closest match regardless of season.",
+      "why_exclusions": "Guards with high p3a_rate should never appear — this case detects if z-score normalization collapses or feature derivation breaks across seasons."
+    }
+  }
+]
