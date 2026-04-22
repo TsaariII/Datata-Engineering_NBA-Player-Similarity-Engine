@@ -17,7 +17,7 @@ def _has_vector_embeddings(engine: Engine, season: int, feat_set: str) -> bool:
             FROM player_season_features
             WHERE season = :season
                 AND feature_set = :feature_set
-                AND embedding = IS NOT NULL
+                AND embedding IS NOT NULL
             LIMIT 1
         )
         """
@@ -76,7 +76,7 @@ def top_k_similiar_pgvector(
         """
         SELECT ps.player_name AS player, 1.0 - (f.embedding <=> :query_vec::vector) AS score
         FROM player_season_features f
-        JOIN player_season ps
+        JOIN player_seasons ps
             ON ps.player_key = f.player_key
             AND ps.season = f.season
         WHERE f.season = :season
@@ -94,7 +94,7 @@ def top_k_similiar_pgvector(
                 'query_vec': query_vec,
                 'season': season,
                 'feature_set': feat_set,
-                'player_name': name,
+                'palyer_name': name,
                 'k': k
             }
         ).fetchall()
