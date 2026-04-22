@@ -13,6 +13,7 @@ dependencies = [
   "pgvector",
   "fastapi",
   "uvicorn",
+  "pytest"
 ]
 
 [project.scripts]
