@@ -55,5 +55,23 @@ services:
       - .:/app
     command: ["uv", "run", "uvicorn", "service.main:app", "--host", "0.0.0.0", "--port", "8555"]
 
+  test:
+    build: .
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - LOG_LEVEL=${LOG_LEVEL:-WARNING}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      etl:
+        condition: service_completed_successfully
+    volumes:
+      - .:/app
+    command: >
+      sh -c "
+        uv run pytest tests/ -m 'not integration' -v --tb=short &&
+        uv run pytest tests/ -m interation -v --tb=short
+      "
+
 volumes:
   pg_data:
