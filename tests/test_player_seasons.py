@@ -131,8 +131,8 @@ class TestEqualGamesTrade:
         ])
         result_a = build_player_seasons(df, season=2024)
         result_b = build_player_seasons(df, season=2024)
-        team_a = result_a[result_a['player_name' == 'Equal Guy'].iloc[0]['team']]
-        team_b = result_b[result_b['player_name' == 'Equal Guy'].iloc[0]['team']]
+        team_a = result_a[result_a['player_name'] == 'Equal Guy'].iloc[0]['team']
+        team_b = result_b[result_b['player_name'] == 'Equal Guy'].iloc[0]['team']
         assert team_a == team_b, 'Dedup result is non-deterministic for equal games'
 
     def test_one_row_produced(self):
@@ -229,7 +229,7 @@ class TestMissingColumns:
             {'player': 'Player A', 'team': 'BOS', 'mp': 32.0, 'pts': 20.0}
         ])
         out = build_player_seasons(df, season=2024)
-        assert len(out) == 2
+        assert len(out) == 1
 
     def test_no_g_column_total_minutes_is_na(self):
         """total_minutes requires both g and mp; without g it should be NA."""

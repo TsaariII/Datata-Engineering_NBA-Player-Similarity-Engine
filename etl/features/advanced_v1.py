@@ -8,12 +8,12 @@ FEATURES = [
     'p3a_rate',         # 3-point attempt rate
     'ftr',              # free throw rate
     # Playmaking & ball security
-    'assist_pct_proxy', # assist % proxy
+    'ast_pct_proxy',    # assist % proxy
     'tov_pct',          # turnover %
     # Rebounding role
     'orb_pct_proxy',    # offensive rebound % proxy
     'drb_pct_proxy',    # defensive rebound % proxy
     # Defense
-    'steals',           # steals per game
-    'blocks'            # blocks per game
+    'stl',              # steals per game
+    'blk'               # blocks per game
 ]

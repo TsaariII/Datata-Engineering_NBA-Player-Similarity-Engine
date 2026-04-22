@@ -36,7 +36,7 @@ from sqlalchemy.engine import Engine
 
 def pytest_configure(config: pytest.Config) -> None:
     """Register custom marks so pytest does not warn about unknown marks."""
-    config.addinvalue_line(
+    config.addinivalue_line(
         'markers',
         'integration: marks tests that require a live PostgreSQL database'
         '(deselect with "-m \'not integration\'")'
@@ -57,7 +57,7 @@ def _normalize_db_url(url: str) -> str:
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
-@pytest.fixtures(scope='session')
+@pytest.fixture(scope='session')
 def db_url() -> str:
     """
     Return the normalized DATABASE_URL string.

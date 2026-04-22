@@ -62,23 +62,27 @@ def _make_seasons(n: int = 30, seed: int = 42) -> pd.DataFrame:
     Covers all raw columns consumed by both derive_features and zscore_features.
     """
     rng = np.random.default_rng(seed)
+    fga = rng.uniform(5, 20, n)
+    fta = rng.uniform(1, 6, n)
+    orb = rng.uniform(0, 3, n)
+    drb = rng.uniform(1, 7, n)
     return pd.DataFrame(
         {
         'player_key': [f"player_{i:03d}" for i in range(n)],
         'player_name': [f"Player {i}" for i in range(n)],
         'season': [2024] * n,
         'mp': rng.uniform(10, 36, n),
-        'pts': rng.uniform(5, 30, n),
-        'fga': rng.uniform(3, 20, n),
-        'fta': rng.uniform(0.5, 8, n),
-        'ft': rng.uniform(0.3, 7, n),
-        'p3a': rng.uniform(0, 10, n),
+        'pts': fga * rng.uniform(0.8, 1.8, n) + fta * rng.uniform(0.6, 0.9, n),
+        'fga': fga,
+        'fta': fta,
+        'ft': fta * rng.uniform(0.6, 0.9, n),
+        'p3a': rng.uniform(0, fga * 0.6),
         'p3': rng.uniform(0, 4, n),
         'ast': rng.uniform(0, 10, n),
         'tov': rng.uniform(0.5, 5, n),
-        'orb': rng.uniform(0, 4, n),
-        'drb': rng.uniform(0.5, 8, n),
-        'trb': rng.uniform(1, 12, n),
+        'orb': orb,
+        'drb': drb,
+        'trb': orb + drb,
         'stl': rng.uniform(0, 3, n),
         'blk': rng.uniform(0, 3, n),
         'g': rng.uniform(20, 82, n)
@@ -109,13 +113,13 @@ class TestZscoreOutputSchame:
     def test_features_set_label_stored(self):
         df = _make_seasons()
         out = zscore_features(df, _make_per_game_pack())
-        assert (out['feature_set'] == PG_FEAT).all()
+        assert (out['feature_set'] == PG_FEAT_SET).all()
     
     def test_feature_names_list_stored(self):
         df = _make_seasons()
         out = zscore_features(df, _make_per_game_pack())
-        for name in out['feature_set']:
-            assert name == PG_FEAT
+        for names in out['feature_names']:
+            assert names == PG_FEAT
 
     def test_z_vector_length_matches_feature_count(self):
         df = _make_seasons()
@@ -163,7 +167,7 @@ class TestZscoreNumerics:
         """z-score invariant: mean of each z-scored column should be ~0."""
         df = _make_seasons(n=100)
         out = zscore_features(df, _make_per_game_pack())
-        matrix = np.array(out['z_scores'].tolist())
+        matrix = np.array(out['z_vector'].tolist())
         col_means = matrix.mean(axis=0)
         for i, feat in enumerate(PG_FEAT):
             assert abs(col_means[i]) < 0.1, (
@@ -173,7 +177,7 @@ class TestZscoreNumerics:
     def test_no_nan_in_z_vector(self):
         df = _make_seasons(n=50)
         out = zscore_features(df, _make_per_game_pack())
-        for i, vec in enumerate(out['z_scores']):
+        for i, vec in enumerate(out['z_vector']):
             for j, v in enumerate(vec):
                 assert not math.isnan(v), (
                     f"NaN in z_vector at row {i}, feature index {j} "
@@ -183,7 +187,7 @@ class TestZscoreNumerics:
     def test_no_inf_in_z_vectors(self):
         df = _make_seasons(n=50)
         out = zscore_features(df, _make_per_game_pack())
-        for vec in out['z_scores']:
+        for vec in out['z_vector']:
             assert not any(math.isinf(v) for v in vec)
     
     def test_no_nan_in_z_scores_dict(self):
@@ -203,7 +207,7 @@ class TestZscoreEdgeCases:
         df['mp'] = 30.0
         out = zscore_features(df, _make_per_game_pack())
         mp_idx = PG_FEAT.index('mp')
-        for vec in out['z_scores']:
+        for vec in out['z_vector']:
             assert vec[mp_idx] == pytest.approx(0.0), (
                 'Constant feature should produce z=0, not error or garbage'
             )
@@ -214,7 +218,7 @@ class TestZscoreEdgeCases:
         df.loc[0, 'pts'] = float('nan')
         out = zscore_features(df, _make_per_game_pack())
         pts_idx = PG_FEAT.index('pts')
-        first_vec = out['z_scores'].iloc[0]
+        first_vec = out['z_vector'].iloc[0]
         assert not math.isnan(first_vec[pts_idx]), (
             'NaN input should be filled to 0.0 in z_vector, not stay NaN'
         )
@@ -226,11 +230,11 @@ class TestZscoreEdgeCases:
         This mirrors the build_features.py warning path.
         """
         df = _make_seasons(n=20)
-        df = df.drop(columns=['3pa'], errors='ignore')
+        df = df.drop(columns=['p3a'], errors='ignore')
         pack = _make_per_game_pack()
         out = zscore_features(df, pack)
-        p3a_idx = PG_FEAT.index('3pa')
-        for vec in out['z_scores']:
+        p3a_idx = PG_FEAT.index('p3a')
+        for vec in out['z_vector']:
             assert vec[p3a_idx] == pytest.approx(0.0)
     
     def test_single_player_does_not_crash(self):
@@ -241,8 +245,9 @@ class TestZscoreEdgeCases:
         df = _make_seasons(n=1)
         out = zscore_features(df, _make_per_game_pack())
         assert len(out) == 1
-        for v in out['z_scores']:
-            assert not math.isnan(v) and not math.isinf(v)
+        for vec in out['z_vector']:
+            for v in vec:
+                assert not math.isnan(v) and not math.isinf(v)
 
     def test_two_players_opposite_z_scores(self):
         """
@@ -270,7 +275,7 @@ class TestZscoreEdgeCases:
             }
         )
         out = zscore_features(df, _make_per_game_pack())
-        vecs = out['z_scores'].tolist()
+        vecs = out['z_vector'].tolist()
         pts_idx = PG_FEAT.index('pts')
         assert vecs[1][pts_idx] > 0
         assert vecs[0][pts_idx] < 0
@@ -288,8 +293,10 @@ class TestDeriveFeatureColumnNames:
         self.derived = derive_features(self.df)
 
     def test_all_derived_columns_present(self):
-        expected = ['ts_pct', 'p3a_rate', 'ftr', 'usg_proxy',
-                    'ast_pct_proxy', 'tov_pct', 'orb_pct_proxy', 'drb_pct_proxy']
+        expected = ['mp', 'usg_proxy', 'ts_pct', 'p3a_rate', 'ftr',
+                    'ast_pct_proxy', 'tov_pct', 'orb_pct_proxy', 'drb_pct_proxy',
+                    'stl', 'blk'
+        ]
         missing = [c for c in expected if c not in self.derived.columns]
         assert missing == [], f"Missing columns: {missing}"
     
@@ -320,7 +327,7 @@ class TestDeriveFeatureNumerics:
         assert (valid <= 1.05).all(), 'ts_pct should not exceed 1.05 for real players'
 
     def test_p3a_rate_in_zero_to_one(self):
-        valid = self.derived['3pa_rate'].dropna()
+        valid = self.derived['p3a_rate'].dropna()
         assert (valid >= 0).all()
         assert (valid <= 1.0).all()
 
@@ -345,6 +352,7 @@ class TestDeriveFeatureNumerics:
         """
         df = _make_seasons(n=5)
         df.loc[0, 'fga'] = 0.5
+        df.loc[0, 'fta'] = 0.0
         derived = derive_features(df)
         assert pd.isna(derived.loc[0, 'ts_pct']), (
             'Player with fga=0.5 should have NaN ts_pct, not a computed value'

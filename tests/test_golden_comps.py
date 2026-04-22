@@ -64,7 +64,7 @@ def _clear_feature_matrix_cache() -> None:
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
-@pytest.fixtures(autouse=True)
+@pytest.fixture(autouse=True)
 def clear_cache():
     """Clear the feature matrix cache before and after every test in this module."""
     _clear_feature_matrix_cache()

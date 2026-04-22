@@ -99,16 +99,16 @@ class TestAdvancedV1Snapshot:
     def test_exact_features_list_and_order(self):
         expected = [
             'mp',
-            'usage_proxy',
+            'usg_proxy',
             'ts_pct',
             'p3a_rate',
             'ftr',
-            'assist_pct_proxy',
-            'turover_pct',
-            'offrb_pct_proxy',
-            'defrb_pct_proxy',
-            'steals',
-            'blocks'
+            'ast_pct_proxy',
+            'tov_pct',
+            'orb_pct_proxy',
+            'drb_pct_proxy',
+            'stl',
+            'blk'
         ]
         assert ADV_FEAT == expected, (
             'advanced_v1.FEATURES has changed. '
