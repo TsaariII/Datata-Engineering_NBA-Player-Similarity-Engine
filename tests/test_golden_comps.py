@@ -32,7 +32,7 @@ import pytest
 from sqlalchemy.engine import Engine
 from etl.features.advanced_v1 import FEATURE_SET as ADV_FEAT_SET
 from etl.features.per_game_v1 import FEATURE_SET as PG_FEAT_SET
-from service.similarity_repo import load_feature_matrix, top_k_similar
+from service.similarity_repo import load_feature_matrix, top_k_similar, top_k_similiar_pgvector
 
 # ---------------------------------------------------------------------------
 # Load golden fixture
@@ -163,7 +163,7 @@ def test_feature_matrix_has_no_all_zero_rows(feat_set: str, season: int, engine:
     if len(players) == 0:
         pytest.skip(f"No data for season={season}, feature_set={feat_set}")
     all_zero_mask = np.all(mat == 0.0, axis=1)
-    all_zero_count = int(all_zero_mask.sum)
+    all_zero_count = int(all_zero_mask().sum)
     all_zero_pct = all_zero_count / len(players)
     assert all_zero_pct < 0.10, (
         f"{all_zero_count}/{len(players)} players ({all_zero_pct:.1%}) have "
@@ -239,3 +239,96 @@ def test_unknown_player_raises_key_error(engine: Engine, feat_table: None):
         player_name='Not a player name',
         k=10
     )
+
+# ---------------------------------------------------------------------------
+# pgvector path tests
+# ---------------------------------------------------------------------------
+@pytest.mark.integration
+def test_pgvector_returns_same_shape_as_in_process(engine: Engine, feat_table: None):
+    """
+    top_k_similiar_pgvector and top_k_similar must return the same number of
+    results for the same query.  Both paths must agree on result count so the
+    API swap is transparent to callers.
+    """
+    players, mat = load_feature_matrix(engine, 2024, ADV_FEAT_SET)
+    if not players:
+        pytest.skip('No data for season=2024')
+    test = players[0]
+    results = top_k_similiar_pgvector(
+        engine=engine,
+        season=2024,
+        feat_set=ADV_FEAT_SET,
+        name=test,
+        k=10
+    )
+    in_proc_res = top_k_similar(
+        engine=engine,
+        season=2024,
+        feat_set=ADV_FEAT_SET,
+        player_name=test,
+        k=10
+    )
+    assert len(results) == len(in_proc_res), (
+        f"pgvector returned {len(results)} results, "
+        f"in-process returned {len(in_proc_res)}"
+    )
+
+@pytest.mark.integration
+def test_pgvector_scores_in_valid_range(engine: Engine, feat_table: None):
+    """
+    Cosine similarity scores from the pgvector path must be in [-1, 1].
+    score = 1 - cosine_distance, where distance is in [0, 2].
+    """
+    players, mat = load_feature_matrix(engine, 2024, ADV_FEAT_SET)
+    if not players:
+        pytest.skip('No data for season=2024')
+    test = players[0]
+    results = top_k_similiar_pgvector(
+        engine=engine,
+        season=2024,
+        feat_set=ADV_FEAT_SET,
+        name=test,
+        k=20
+    )
+    for r in results:
+        score = r['score']
+        assert -1.0 <= score <= 1.0, (
+            f"pgvector score {score:.4f} for '{r['player']}' is outside [-1, 1]."
+        )
+
+@pytest.mark.integration
+def test_pgvector_self_not_in_results(engine: Engine, feat_table: None):
+    """
+    Query player must not appear in their own pgvector results.
+    The WHERE clause filters ps.player_name != :player_name server-side.
+    """
+    players, mat = load_feature_matrix(engine, 2024, ADV_FEAT_SET)
+    if not players:
+        pytest.skip('No data for season=2024')
+    test = players[0]
+    results = top_k_similiar_pgvector(
+        engine=engine,
+        season=2024,
+        feat_set=ADV_FEAT_SET,
+        name=test,
+        k=10
+    )
+    names = _result_names(results)
+    assert test not in names, (
+        f"Player '{test}' appeared in their own pgvector similarity results"
+    )
+
+@pytest.mark.integration
+def test_pgvector_unknown_player_raises_key_error(engine: Engine, feat_table: None):
+    """
+    top_k_similiar_pgvector must raise KeyError for unknown players,
+    matching the contract of top_k_similar so the API 404 path works.
+    """
+    with pytest.raises(KeyError):
+        top_k_similiar_pgvector(
+            engine=engine,
+            season=2024,
+            feat_set=ADV_FEAT_SET,
+            name='Not a player name',
+            k=10,
+        )

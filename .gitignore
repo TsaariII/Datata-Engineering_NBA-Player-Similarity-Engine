@@ -19,3 +19,4 @@ data/processed/*
 data/embeddings/*
 notebooks/
 data/
+.pytest_cache
