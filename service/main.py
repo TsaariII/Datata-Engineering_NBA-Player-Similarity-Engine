@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Query
 from sqlalchemy import create_engine, text
-from service.similarity_repo import top_k_similar
+from service.similarity_repo import top_k_similiar_pgvector
 from etl.features.per_game_v1 import FEATURE_SET as PG_V1_FEAT_SET
 from etl.features.advanced_v1 import FEATURE_SET as ADV_V1_FEAT_SET
 
@@ -101,11 +101,11 @@ def similar_players(
     Run `build_features --year {year}` first to populate the feature table.
     """
     try:
-        results = top_k_similar(
+        results = top_k_similiar_pgvector(
             engine=engine(),
             season=year,
             feat_set=feature_set,
-            player_name=name,
+            name=name,
             k=k,
         )
     except KeyError as e:
