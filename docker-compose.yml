@@ -23,7 +23,7 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - DATABASE_URL=${DATABASE_URL}
       - NBA_PER_GAME_CSV=${NBA_PER_GAME_CSV}
-      - ETL_YEAR=${ETL_YEAR:-2024}
+      - ETL_YEARS=${ETL_YEARS:-${ETL_YEAR:-2024}}
     depends_on:
       postgres:
         condition: service_healthy
@@ -32,8 +32,8 @@ services:
       - ./data:/app/data
     command: >
       sh -c "
-        uv run python -m etl.scripts.run_etl --year ${ETL_YEAR:-2024} &&
-        uv run python -m etl.scripts.build_features --year ${ETL_YEAR:-2024}
+        uv run python -m etl.scripts.run_etl --years $$ETL_YEARS &&
+        uv run python -m etl.scripts.build_features --years $$ETL_YEARS
       "
 
   api:
@@ -70,7 +70,7 @@ services:
     command: >
       sh -c "
         uv run pytest tests/ -m 'not integration' -v --tb=short &&
-        uv run pytest tests/ -m interation -v --tb=short
+        uv run pytest tests/ -m integration -v --tb=short
       "
 
 volumes:

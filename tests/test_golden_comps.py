@@ -27,7 +27,7 @@ Running
 from __future__ import annotations
 import json
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Set, Tuple
 import pytest
 from sqlalchemy.engine import Engine
 from etl.features.advanced_v1 import FEATURE_SET as ADV_FEAT_SET
@@ -45,6 +45,32 @@ def _load_golden_comps() -> List[Dict[str, Any]]:
     return json.loads(_FIXTURE_PATH.read_text())
 
 _GOLDEN = _load_golden_comps()
+
+# ---------------------------------------------------------------------------
+# Derive the set of (feature_set, season) pairs referenced by the fixture.
+# Used to parametrize structural sanity tests so they automatically cover
+# every season that golden_comps.json asks about — no manual update needed
+# when new seasons are added.
+# ---------------------------------------------------------------------------
+def _fixture_feat_season_pairs() -> List[Tuple[str, int]]:
+    """Return sorted unique (feature_set, season) pairs from golden_comps.json."""
+    seen: Set[Tuple[str, int]] = set()
+    pairs: List[Tuple[str, int]] = []
+    for case in _GOLDEN:
+        fs = case.get('feat_set', ADV_FEAT_SET)
+        season = case['query']['season']
+        key = (fs, season)
+        if key not in seen:
+            seen.add(key)
+            pairs.append(key)
+    for fs in (ADV_FEAT_SET, PG_FEAT_SET):
+        key = (fs, 2024)
+        if key not in seen:
+            seen.add(key)
+            pairs.append(key)
+    return sorted(pairs)
+
+_FEAT_SEASON_PAIRS = _fixture_feat_season_pairs()
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -100,7 +126,7 @@ def test_golden_comp(case: Dict[str, Any], engine: Engine, required_feats_table:
         )
     results = top_k_similar(
         engine=engine,
-        season=query['seson'],
+        season=query['season'],
         feat_set=feat_set,
         player_name=query['name'],
         k=k
@@ -114,7 +140,7 @@ def test_golden_comp(case: Dict[str, Any], engine: Engine, required_feats_table:
         f"Rationale: {case.get('rationale', {}).get('why_matches', '')}"
     )
     wrong = [p for p in case.get('must_not_appear', []) if p in names]
-    assert wrong == (
+    assert wrong == [], (
         f"[{case['_id']}] These players should NOT appear in top-{k} for "
         f"'{query['player']}' ({query['season']}): {wrong}\n"
         f"Got: {names}\n"
@@ -163,7 +189,7 @@ def test_feature_matrix_has_no_all_zero_rows(feat_set: str, season: int, engine:
     if len(players) == 0:
         pytest.skip(f"No data for season={season}, feature_set={feat_set}")
     all_zero_mask = np.all(mat == 0.0, axis=1)
-    all_zero_count = int(all_zero_mask().sum)
+    all_zero_count = int(all_zero_mask().sum())
     all_zero_pct = all_zero_count / len(players)
     assert all_zero_pct < 0.10, (
         f"{all_zero_count}/{len(players)} players ({all_zero_pct:.1%}) have "
