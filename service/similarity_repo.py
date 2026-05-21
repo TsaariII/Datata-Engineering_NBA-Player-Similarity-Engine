@@ -94,11 +94,11 @@ def top_k_similiar_pgvector(
                 'query_vec': query_vec,
                 'season': season,
                 'feature_set': feat_set,
-                'palyer_name': name,
+                'player_name': name,
                 'k': k
             }
         ).fetchall()
-    return [{'palyer': r[0], 'score': float(r[1])} for r in rows]
+    return [{'player': r[0], 'score': float(r[1])} for r in rows]
 
 def _cosine_scores(x: np.ndarray, q: np.ndarray) -> np.ndarray:
     """Cosine similarity scores of every row in x against vector q."""

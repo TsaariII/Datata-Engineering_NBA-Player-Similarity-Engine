@@ -84,7 +84,7 @@ def _parse_years(args: argparse.Namespace) -> list[int]:
     """
     if args.years:
         years = args.years
-    elif args.years is not None:
+    elif args.year is not None:
         years = [args.year]
     else:
         raise SystemExit('Provide --year <N> or --years <N> [<N> ...]')
@@ -179,7 +179,7 @@ def main() -> None:
             'Duplicates are silently ignored.'
         )
     )
-    ap.add_argument('--year', type=int, required=True, help='NBA season')
+    # ap.add_argument('--year', type=int, required=True, help='NBA season')
     ap.add_argument(
         '--db-url',
         default=os.getenv('DATABASE_URL'),
